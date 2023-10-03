@@ -16,7 +16,7 @@ clock = pygame.time.Clock()
 dt = 0
 running = True
 
-GRAVITY = 0.001   # 6.67 * math.pow(10, -11)
+GRAVITY = 0.1   # 6.67 * math.pow(10, -11)
 Bodies = []
 Paths = []
 path_creation_interval = 30  # 30 frames represents 0.5 seconds passed @60FPS.
@@ -46,20 +46,44 @@ class Body:
                 xr = abs(other.xpos - self.xpos)
                 yr = abs(other.ypos - self.ypos)
                 gmm = GRAVITY * self.mass * other.mass
-                constant = 1
+                constant = 100
                 # r = math.sqrt(math.pow(xr, 2) + math.pow(yr, 2))
                 x_force_applied = gmm / math.sqrt(math.pow(xr, 2) + math.pow(constant, 2))
                 y_force_applied = gmm / math.sqrt(math.pow(yr, 2) + math.pow(constant, 2))
+                x_accel = (x_force_applied*dt) / self.mass
+                y_accel = (y_force_applied*dt) / self.mass
+
+                xk1 = x_accel * xr
+                xk2 = x_accel * (xr + xk1 * (dt/2))
+                xk3 = x_accel * (xr + xk2 * (dt/2))
+                xk4 = x_accel * (xr + xk3 * dt)
+                x_accel = (dt/6) * (xk1 + (2*xk2) + (2*xk3) + xk4)
+
+                yk1 = y_accel * yr
+                yk2 = y_accel * (yr + yk1 * (dt/2))
+                yk3 = y_accel * (yr + yk2 * (dt/2))
+                yk4 = y_accel * (yr + yk3 * dt)
+                y_accel = (dt / 6) * (yk1 + (2 * yk2) + (2 * yk3) + yk4)
 
                 if other.xpos > self.xpos:
-                    self.accel[0] += (x_force_applied * dt) / self.mass
+                    self.accel[0] += x_accel
                 elif other.xpos < self.xpos > 0:
-                    self.accel[0] -= (x_force_applied * dt) / self.mass
+                    self.accel[0] -= x_accel
 
                 if other.ypos > self.ypos:
-                    self.accel[1] += (y_force_applied * dt) / self.mass
+                    self.accel[1] += y_accel
                 elif other.ypos < self.ypos:
-                    self.accel[1] -= (y_force_applied * dt) / self.mass
+                    self.accel[1] -= y_accel
+
+                # if other.xpos > self.xpos:
+                #     self.accel[0] += (x_force_applied * dt) / self.mass
+                # elif other.xpos < self.xpos > 0:
+                #     self.accel[0] -= (x_force_applied * dt) / self.mass
+                #
+                # if other.ypos > self.ypos:
+                #     self.accel[1] += (y_force_applied * dt) / self.mass
+                # elif other.ypos < self.ypos:
+                #     self.accel[1] -= (y_force_applied * dt) / self.mass
 
         print(self.velo)
         self.velo[0] += self.accel[0] * dt
@@ -84,7 +108,7 @@ class Path:
         return new_color
 
 
-for i in range(50):
+for i in range(25):
     rgb = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
     velo = [random.randint(-1, 1) * random.random(), random.randint(-1, 1) * random.random()]
     mass = random.randint(30, 70)
@@ -92,16 +116,18 @@ for i in range(50):
     planet = Body(random.randint(100, XMAX-100), random.randint(100, YMAX-100), radius, rgb, mass, velo)
     Bodies.append(planet)
 
-# planet = Body(XMAX/2, YMAX/2, 5, "yellow1", 60, [0, 0])
-# Bodies.append(planet)
-# planet2 = Body((XMAX/2) - 100, (YMAX/2) - 10, 5, "turquoise4", 60, [0, -0.5])
+planet = Body(XMAX/2, YMAX/2, 5, "yellow1", 500, [0, 0])
+Bodies.append(planet)
+# planet2 = Body((XMAX/2) - 100, YMAX/2, 5, "turquoise4", 50, [0, -1])
 # Bodies.append(planet2)
-# planet3 = Body((XMAX/2) + 100, (YMAX/2) + 10, 5, "aquamarine", 60, [0, 0.5])
+# planet3 = Body((XMAX/2) - 250, YMAX/2, 5, "aquamarine", 50, [0, -1])
 # Bodies.append(planet3)
-# planet4 = Body(random.randint(100, XMAX-100), random.randint(100, YMAX-100), 5, "deeppink3", 60, [-1, 0])
+# planet4 = Body((XMAX/2) + 100, YMAX/2, 5, "turquoise4", 50, [0, 1])
 # Bodies.append(planet4)
-# planet5 = Body(random.randint(100, XMAX-100), random.randint(100, YMAX-100), 5, "aquamarine", 60, [1, 0])
+# planet5 = Body((XMAX/2) + 250, YMAX/2, 5, "aquamarine", 50, [0, 1])
 # Bodies.append(planet5)
+
+
 
 while running:
     # -- user events --
