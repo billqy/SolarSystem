@@ -1,27 +1,28 @@
 import pygame
-import numpy
 import math
 import random
 from scipy.interpolate import interp1d
+from win32gui import SetWindowPos
 
 # F = G(m1)(m2) / r^2   (r = distance between centers of mass)
 # a = F/m (acceleration is the rate of change of velocity)
 
+GRAVITY = 0.1
+Bodies = []
+Paths = []
+path_creation_interval = 5  # 5 frames represents 0.1 seconds passed @60FPS.
+path_max_lifetime = 180  # 120 frames represents 2 seconds passed @60FPS.
+sim_choice = int(input("Enter 1 or 2 to simulate Solar System(1) or or 3-Body(2) or Random(3): "))
+if sim_choice == 3: object_count = int(input("Enter number of objects to simulate: "))
+
 pygame.init()
-XMAX = 700
+XMAX = 800
 YMAX = 700
 screen = pygame.display.set_mode((XMAX, YMAX))
-
+SetWindowPos(pygame.display.get_wm_info()['window'], -1, 0, 0, 0, 0, 1)
 clock = pygame.time.Clock()
 dt = 0
 running = True
-
-GRAVITY = 100   # 6.67 * math.pow(10, -11)
-Bodies = []
-Paths = []
-path_creation_interval = 30  # 30 frames represents 0.5 seconds passed @60FPS.
-path_max_lifetime = 180  # 180 frames represents 3 seconds passed @60FPS.
-
 
 class Body:
     def __init__(self, xpos, ypos, radius, color, mass, velo):
@@ -32,7 +33,6 @@ class Body:
 
         self.mass = mass
         self.velo = velo
-        self.accel = [0, 0]
 
         self.path_frame_count = 0
 
@@ -61,7 +61,6 @@ class Body:
                 elif other.ypos < self.ypos:
                     self.velo[1] -= (y_force_applied * dt) / self.mass
 
-        print(self.velo)
         self.xpos += self.velo[0] * dt
         self.ypos += self.velo[1] * dt
 
@@ -84,25 +83,45 @@ class Path:
         return new_color
 
 
-# for i in range(25):
-#     rgb = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
-#     velo = [random.randint(-1, 1) * random.random(), random.randint(-1, 1) * random.random()]
-#     mass = random.randint(30, 70)
-#     radius = mass/10
-#     planet = Body(random.randint(100, XMAX-100), random.randint(100, YMAX-100), radius, rgb, mass, velo)
-#     Bodies.append(planet)
-
-planet = Body(XMAX/2, YMAX/2, 5, "yellow1", 50, [0, 0])
-Bodies.append(planet)
-planet2 = Body((XMAX/2) + 100, YMAX/2, 5, "turquoise4", 50, [0, 100])
-Bodies.append(planet2)
-planet3 = Body((XMAX/2) - 100, YMAX/2, 5, "aquamarine", 50, [0, -100])
-Bodies.append(planet3)
-# planet4 = Body((XMAX/2) + 100, YMAX/2, 5, "turquoise4", 50, [0, 1])
-# Bodies.append(planet4)
-# planet5 = Body((XMAX/2) + 250, YMAX/2, 5, "aquamarine", 50, [0, 1])
-# Bodies.append(planet5)
-
+if sim_choice == 3:  # User selected random simulation
+    for i in range(object_count):
+        rgb = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+        velo = [random.randint(-100, 100) * random.random(), random.randint(-100, 100) * random.random()]
+        mass = random.randint(100, 10000)
+        radius = 5
+        planet = Body(random.randint(100, XMAX-100), random.randint(100, YMAX-100), radius, rgb, mass, velo)
+        Bodies.append(planet)
+elif sim_choice == 2:
+    rgb1 = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+    rgb2 = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+    rgb3 = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+    mass = 100_000
+    radius = 5
+    planet1 = Body(XMAX/2, YMAX/2, radius, rgb1, mass, [0, 0])
+    Bodies.append(planet1)
+    planet2 = Body(XMAX/2 + 150, YMAX/2, radius, rgb2, mass, [0, 100])
+    Bodies.append(planet2)
+    planet3 = Body(XMAX/2 - 150, YMAX/2, radius, rgb3, mass, [0, -100])
+    Bodies.append(planet3)
+else:
+    sun = Body(XMAX/2, YMAX/2, 10, "yellow1", 100_000, [0, 0])
+    Bodies.append(sun)
+    mercury = Body((XMAX/2) - 50, YMAX/2, 2, "antiquewhite4", 20, [0, -100])
+    Bodies.append(mercury)
+    venus = Body((XMAX/2) - 100, YMAX/2, 4, "chocolate", 40, [0, -100])
+    Bodies.append(venus)
+    earth = Body((XMAX/2) - 150, YMAX/2, 5, "cornflowerblue", 50, [0, -100])
+    Bodies.append(earth)
+    mars = Body((XMAX/2) - 200, YMAX/2, 3, "coral3", 30, [0, -100])
+    Bodies.append(mars)
+    jupiter = Body((XMAX/2) - 250, YMAX/2, 8, "cornsilk2", 80, [0, -100])
+    Bodies.append(jupiter)
+    saturn = Body((XMAX/2) - 300, YMAX/2, 7, "darkgoldenrod2", 70, [0, -100])
+    Bodies.append(saturn)
+    uranus = Body((XMAX/2) - 350, YMAX/2, 6, "cyan3", 60, [0, -100])
+    Bodies.append(uranus)
+    neptune = Body((XMAX/2) - 400, YMAX/2, 6, "deepskyblue4", 60, [0, -100])
+    Bodies.append(neptune)
 
 
 while running:
